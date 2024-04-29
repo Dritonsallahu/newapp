@@ -1,0 +1,392 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:news_app/core/consts/colors_consts.dart';
+import 'package:news_app/core/consts/dimensions_consts.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:news_app/core/consts/widgets.dart';
+import 'package:news_app/features/data/models/post_model.dart';
+import 'package:news_app/features/presentation/providers/post_provider.dart';
+import 'package:news_app/features/presentation/screens/single_news_screen.dart';
+import 'package:news_app/features/presentation/widgets/custom_animated_list.dart';
+import 'package:provider/provider.dart';
+
+class LatestNews extends StatefulWidget {
+  const LatestNews({Key? key}) : super(key: key);
+
+  @override
+  State<LatestNews> createState() => _LatestNewsState();
+}
+
+class _LatestNewsState extends State<LatestNews> {
+  getLastNews(String category) {
+    var postProvider = Provider.of<PostProvider>(context, listen: false);
+    postProvider.getLatestNewsFromDB(context, category);
+    postProvider.chooseCategory("");
+  }
+
+
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      getLastNews("");
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var postProvider = Provider.of<PostProvider>(context);
+    return Container(
+      width: getPhoneWidth(context),
+      height: getPhoneHeight(context),
+      padding: const EdgeInsets.only(top: 7),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          getLastNews("");
+        },
+        child: ListView(
+          physics: const ClampingScrollPhysics(),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.discover,
+                        style: GoogleFonts.inter(
+                            fontSize: 30, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 3,
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.newsfromallovertheworld,
+                        style: GoogleFonts.inter(
+                            fontSize: 15,
+                            color: const Color(0xff939393),
+                            fontWeight: FontWeight.w400),
+                      )
+                    ],
+                  ),
+                  // const SizedBox(
+                  //   height: 10,
+                  // ),
+                  // Container(
+                  //   child: CupertinoTextField(
+                  //     placeholder: AppLocalizations.of(context)!.search,
+                  //     placeholderStyle: GoogleFonts.inter(color: Colors.grey),
+                  //     decoration: BoxDecoration(
+                  //         borderRadius: BorderRadius.circular(100),
+                  //         color: const Color(0xfff6f6f7)),
+                  //     padding: const EdgeInsets.symmetric(
+                  //         horizontal: 20, vertical: 15),
+                  //     suffix: Padding(
+                  //       padding: const EdgeInsets.only(right: 20),
+                  //       child: SvgPicture.asset(
+                  //         "assets/icons/filter.svg",
+                  //         width: 30,
+                  //         color: Colors.grey,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+                width: getPhoneWidth(context),
+                height: 40,
+                child: SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.only(left: 10),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: postProvider.getNewsCategories("All").length,
+                      itemBuilder: (context, index) {
+                        var category =
+                        postProvider.getNewsCategories("All")[index];
+                        return CustomAnimatedList(
+                          index: index,
+
+                          child: Row(
+                            children: [
+                              index != 0
+                                  ? const SizedBox()
+                                  : Padding(
+                                padding: const EdgeInsets.only(
+                                  right: 10,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    chooseCategory(
+                                        postProvider
+                                            .getNewsCategories("All"),
+                                        "");
+                                    getLastNews( "");
+                                  },
+                                  child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 18, vertical: 10),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                          BorderRadius.circular(100),
+                                          color: !noCategoryChoosed(
+                                              postProvider
+                                                  .getNewsCategories(
+                                                  "All"))
+                                              ? blueDefaultColor
+                                              : const Color(0xfff6f6f7)),
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            "All ",
+                                            style: GoogleFonts.inter(
+                                                fontSize: 17,
+                                                color: !noCategoryChoosed(
+                                                    postProvider
+                                                        .getNewsCategories(
+                                                        "All"))
+                                                    ? Colors.white
+                                                    : const Color(
+                                                    0xff808080)),
+                                          ),
+                                        ],
+                                      )),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  right: 10,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    chooseCategory(
+                                        postProvider.getNewsCategories("All"),
+                                        postProvider
+                                            .getNewsCategories("All")[index]
+                                            .id);
+                                    getLastNews(category.categoryName!);
+                                  },
+                                  child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 18, vertical: 12),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                          BorderRadius.circular(100),
+                                          color: isChoosedCategory(
+                                              postProvider
+                                                  .getNewsCategories("All"),
+                                              category.id)
+                                              ? blueDefaultColor
+                                              : const Color(0xfff6f6f7)),
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            "${category.categoryName!} ",
+                                            style: GoogleFonts.inter(
+                                                fontSize: 17,
+                                                color: isChoosedCategory(
+                                                    postProvider
+                                                        .getNewsCategories(
+                                                        "All"),
+                                                    category.id)
+                                                    ? Colors.white
+                                                    : const Color(0xff808080)),
+                                          ),
+                                        ],
+                                      )),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                )),
+            const SizedBox(
+              height: 15,
+            ),
+            ListView.builder(
+                shrinkWrap: true,
+                physics: const ScrollPhysics(),
+                itemCount: postProvider.getLatestNews().length,
+                itemBuilder: (context, index) {
+                  var post = postProvider.getLatestNews()[index];
+                  return CustomAnimatedList(
+                    index: index,
+                    duration: Duration(milliseconds: 200 + (index * 100)),
+                    begin: 0.9,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6.5),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => SingleNewsScreen(
+                                    postModel: post,
+                                  )));
+                        },
+                        child: Container(
+                          color: Colors.transparent,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 110,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    image: DecorationImage(
+                                        fit: BoxFit.cover,
+                                        image: NetworkImage(post.image!))),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                              BorderRadius.circular(100),
+                                              image: const DecorationImage(
+                                                  image: AssetImage(
+                                                      "assets/images/mmc-logo.png"))),
+                                        ),
+                                        const SizedBox(
+                                          width: 4,
+                                        ),
+                                        SizedBox(
+                                          width: getPhoneWidth(context) - 180,
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                "${post.author['username']} • ${post.category!.categoryName}",
+                                                style: GoogleFonts.inter(
+                                                    fontSize: 13),
+                                              ),
+                                              Text(
+                                                getTimeFormat(post.createdAt!),
+                                                style: GoogleFonts.inter(
+                                                    fontSize: 13,
+                                                    color: Colors.grey[600]),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 4,
+                                    ),
+                                    SizedBox(
+                                      width: getPhoneWidth(context) - 150,
+                                      child: Text(
+                                        post.title!,
+                                        style: GoogleFonts.inter(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w600),
+                                        maxLines: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 3,
+                                    ),
+                                    SizedBox(
+                                      width: getPhoneWidth(context) - 150,
+                                      child: Text(
+                                        post.subtitle!,
+                                        style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            color: Colors.grey[700]),
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 3,
+                                    ),
+                                    SizedBox(
+                                      width: getPhoneWidth(context) - 150,
+                                      child: Text(
+                                        getDateFormat(post.createdAt!),
+                                        style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            color: Colors.grey[800],
+                                            fontWeight: FontWeight.w600),
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                })
+          ],
+        ),
+      ),
+    );
+  }
+
+  chooseCategory(newsCategories, categoryId) {
+    for (int i = 0; i < newsCategories.length; i++) {
+      if (newsCategories[i].id == categoryId) {
+        newsCategories[i].choosed = true;
+      } else {
+        newsCategories[i].choosed = false;
+      }
+    }
+  }
+
+  bool isChoosedCategory(newsCategories, categoryId) {
+    for (int i = 0; i < newsCategories.length; i++) {
+      if (newsCategories[i].id == categoryId && newsCategories[i].choosed) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  noCategoryChoosed(newsCategories) {
+    for (int i = 0; i < newsCategories.length; i++) {
+      if (newsCategories[i].choosed) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
